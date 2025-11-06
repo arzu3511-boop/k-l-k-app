@@ -2,7 +2,7 @@ self.addEventListener('install', e => {
   e.waitUntil(
     caches.open('windcalc-v1').then(cache => cache.addAll([
       './',
-      './1.html',
+      './index.html',
       './manifest.json'
     ]))
   );
@@ -13,3 +13,4 @@ self.addEventListener('fetch', e => {
     caches.match(e.request).then(response => response || fetch(e.request))
   );
 });
+
