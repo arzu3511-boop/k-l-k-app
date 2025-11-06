@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>By Babaeff</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js');
+}
+</script>
+<style>
+  :root {
+    --bg:#0f172a; --card:#111827; --muted:#9ca3af; --accent:#38bdf8; --accent2:#a78bfa;
+    --good:#22c55e; --warn:#f59e0b; --bad:#ef4444; --text:#e5e7eb;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;
+    background:linear-gradient(135deg,#0b1229,#0f172a 50%,#0b1229);color:var(--text);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .app{width:clamp(320px,100%,1080px);background:rgba(17,24,39,.8);border:1px solid rgba(255,255,255,.06);
+    border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);overflow:hidden;}
+  header{padding:22px 24px 10px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  header .title{font-size:20px;font-weight:700;letter-spacing:.3px}
+  .grid{display:grid;grid-template-columns: 440px 1fr;gap:18px;padding:18px;}
+  @media (max-width: 1000px){.grid{grid-template-columns: 1fr;}}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);
+    border-radius:14px;padding:16px;}
+  .card h3{margin:0 0 10px;font-size:16px;opacity:.9}
+  label{display:block;font-weight:600;margin-bottom:8px;color:#dbeafe}
+  .row{display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap}
+  input[type="number"]{
+    padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.12);
+    background:#0b1229;color:var(--text);outline:none;width:150px;
+  }
+  input[type="range"]{width:100%}
+  .hint{font-size:12px;color:var(--muted);margin:4px 0 0}
+  .kpi-wrap{display:grid;grid-template-columns: repeat(3, 1fr);gap:10px;margin-top:6px}
+  .kpi{background:#0b1229;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px}
+  .kpi .label{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .kpi .value{font-size:20px;font-weight:800}
+  .legend{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .dot.wind{background:var(--accent)} .dot.rwy{background:var(--accent2)}
+  .btn{appearance:none;border:1px solid rgba(255,255,255,.14);background:#0b1229;color:var(--text);
+    padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600}
+  .btn:hover{filter:brightness(1.1)}
+  footer{padding:10px 16px 18px;color:var(--muted);font-size:12px}
+  .vizbox{display:flex;align-items:center;justify-content:center;padding:8px}
+  .err{color:var(--bad);font-size:12px;min-height:16px;margin-top:4px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .four{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .badge{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
+  .pill{padding:6px 10px;border:1px solid rgba(255,255,255,.14);border-radius:999px;user-select:none}
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="title">Dairə üzrə küləyin hesablanması sistemi</div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <h3>Daxil et</h3>
+             <label for="deg">δ°: Küləyin əsmə istiqaməti (0–360°)</label>
+        <div class="row">
+          <input id="deg" type="number" min="0" max="360" step="1" value="45" />
+          <button class="btn" id="btnSync">Hesabla</button>
+          <button class="btn" id="btnReset">Sıfırla</button>
+        </div>
+        <input id="degRange" type="range" min="0" max="360" step="1" value="45" />
+
+        <div class="row" style="margin-top:8px">
+          <div>
+            <label for="spd">U: Külək sürəti (m/s)</label>
+            <input id="spd" type="number" min="0" step="1" value="5" />
+          </div>
+
+          <div class="badge">Seçilmiş zolaq (oturma): <strong id="kRwy">28</strong>°</div>
+        </div>
+<input id="spdRange" type="range" min="0" max="25" step="1" value="5" />
+
+
+        <div class="kpi-wrap" style="margin-top:6px">
+          <div class="kpi"><div class="label">KB (0–90°)</div><div class="value" id="kKB">—</div></div>
+          <div class="kpi"><div class="label">Uyan (m/s)</div><div class="value" id="kUyan">—</div></div>
+          <div class="kpi"><div class="label">Uqar (m/s)</div><div class="value" id="kUqar">—</div></div>
+        </div>
+
+        <div class="four" style="margin-top:10px">
+          <div class="kpi"><div class="label">AB1</div><div class="value" id="ab1">—</div></div>
+          <div class="kpi"><div class="label">AB2</div><div class="value" id="ab2">—</div></div>
+          <div class="kpi"><div class="label">AB3</div><div class="value" id="ab3">—</div></div>
+          <div class="kpi"><div class="label">AB4</div><div class="value" id="ab4">—</div></div>
+        </div>
+
+        <div class="four" style="margin-top:10px">
+          <div class="kpi"><div class="label">MK1</div><div class="value" id="mk1">—</div></div>
+          <div class="kpi"><div class="label">MK2</div><div class="value" id="mk2">—</div></div>
+          <div class="kpi"><div class="label">MK3</div><div class="value" id="mk3">—</div></div>
+          <div class="kpi"><div class="label">MK4</div><div class="value" id="mk4">—</div></div>
+        </div>
+
+      </section>
+
+      <section class="card">
+        <h3>Vizual</h3>
+        <div class="legend" style="margin-bottom:6px">
+          <span class="dot wind"></span> Külək oxu
+          <span class="dot rwy"></span> Zolaq (28° ↔ 208°)
+        </div>
+        <div class="vizbox">
+          <svg id="viz" viewBox="0 0 400 400" width="100%" height="100%" style="max-width:560px; aspect-ratio:1/1;">
+            <defs>
+              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+                <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <circle cx="200" cy="200" r="150" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="2"/>
+            <g id="ticks"></g>
+
+            <!-- Runway line with labels -->
+            <line id="rwyLine" x1="200" y1="200" x2="200" y2="50" stroke="var(--accent2)" stroke-width="6" stroke-linecap="round" filter="url(#glow)"/>
+            <line id="rwyLineOpp" x1="200" y1="200" x2="200" y2="350" stroke="var(--accent2)" stroke-width="6" stroke-linecap="round" opacity=".5"/>
+            <text id="lbl28" x="200" y="40" text-anchor="middle" fill="rgba(167,139,250,.95)" font-size="14" font-weight="700">28°</text>
+            <text id="lbl208" x="200" y="370" text-anchor="middle" fill="rgba(167,139,250,.65)" font-size="14" font-weight="700">208°</text>
+
+            <!-- Wind arrow from edge to center -->
+            <g id="windArrow" filter="url(#glow)">
+              <line x1="200" y1="65" x2="200" y2="200" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/>
+              <polygon id="arrowHead" points="200,65 192,85 208,85" fill="var(--accent)"/>
+            </g>
+
+            <!-- Cardinal labels -->
+            <text x="200" y="45" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="12">0°/360°</text>
+            <text x="378" y="206" text-anchor="end"  fill="rgba(255,255,255,.7)" font-size="12">90°</text>
+            <text x="200" y="363" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="12">180°</text>
+            <text x="22" y="206"  text-anchor="start" fill="rgba(255,255,255,.7)" font-size="12">270°</text>
+          </svg>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      Bu sistem 2025-ci ildə Babazadə Arzu tərəfindən hazırlanmışdır.
+    </footer>
+  </div>
+
+<script>
+(function(){
+  const el = {
+    deg: document.getElementById('deg'),
+    range: document.getElementById('degRange'),
+    spd: document.getElementById('spd'),
+spdRange: document.getElementById('spdRange'),
+    btnSync: document.getElementById('btnSync'),
+    btnReset: document.getElementById('btnReset'),
+    kRwy: document.getElementById('kRwy'),
+    kKB: document.getElementById('kKB'),
+    kUyan: document.getElementById('kUyan'),
+    kUqar: document.getElementById('kUqar'),
+    ab1: document.getElementById('ab1'),
+    ab2: document.getElementById('ab2'),
+    ab3: document.getElementById('ab3'),
+    ab4: document.getElementById('ab4'),
+    mk1: document.getElementById('mk1'),
+    mk2: document.getElementById('mk2'),
+    mk3: document.getElementById('mk3'),
+    mk4: document.getElementById('mk4'),
+    rwyLine: document.getElementById('rwyLine'),
+    rwyLineOpp: document.getElementById('rwyLineOpp'),
+    windArrow: document.getElementById('windArrow'),
+    arrowHead: document.getElementById('arrowHead'),
+    ticks: document.getElementById('ticks')
+  };
+
+  // Draw ticks every 10°, thicker at 30°
+  const cx=200, cy=200, R=150;
+  for(let a=0; a<360; a+=10){
+    const ang = (a-90) * Math.PI/180;
+    const r1 = (a%30===0) ? R-14 : R-7;
+    const r2 = R;
+    const x1 = cx + r1*Math.cos(ang), y1 = cy + r1*Math.sin(ang);
+    const x2 = cx + r2*Math.cos(ang), y2 = cy + r2*Math.sin(ang);
+    const sw = (a%30===0)? 2.2 : 1.2;
+    const o  = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    o.setAttribute('x1', x1); o.setAttribute('y1', y1);
+    o.setAttribute('x2', x2); o.setAttribute('y2', y2);
+    o.setAttribute('stroke', 'rgba(255,255,255,.25)');
+    o.setAttribute('stroke-width', sw);
+    el.ticks.appendChild(o);
+  }
+
+  function clamp360(x){return ((x % 360) + 360) % 360;}
+  function pickRunwayAuto(d){return (d<=118 || d>=298) ? 28 : 208;}
+  function minAngle(a,b){const d=Math.abs(a-b);return Math.min(d, 360-d);} // [0,180]
+  function computeKB(d, rwy){const delta=minAngle(d,rwy);return Math.min(delta,180-delta);} // [0,90]
+
+  function setRunwayLines(rwy){
+    setLineAtAngle(el.rwyLine, rwy, 150);
+    setLineAtAngle(el.rwyLineOpp, (rwy+180)%360, 150);
+    // labels are static at ends; line rotation is enough
+  }
+
+  function setLineAtAngle(lineEl, angleDeg, len){
+    const ang = (angleDeg - 90) * Math.PI/180;
+    const x2 = cx + len*Math.cos(ang);
+    const y2 = cy + len*Math.sin(ang);
+    lineEl.setAttribute('x1', cx); lineEl.setAttribute('y1', cy);
+    lineEl.setAttribute('x2', x2); lineEl.setAttribute('y2', y2);
+  }
+
+  // Arrow from edge to center: tip on circumference pointing to center
+  function setArrowEdgeToCenter(groupEl, angleDeg, len){
+    const ang = (angleDeg - 90) * Math.PI/180;
+    const tipX = cx + len*Math.cos(ang);
+    const tipY = cy + len*Math.sin(ang);
+    const baseX = cx; const baseY = cy;
+
+    const line = groupEl.querySelector('line');
+    line.setAttribute('x1', tipX); line.setAttribute('y1', tipY);
+    line.setAttribute('x2', baseX); line.setAttribute('y2', baseY);
+
+    // arrow head triangle at tip (outer edge)
+    const leftAng = ang + Math.PI/2, rightAng = ang - Math.PI/2;
+    const wing = 8, back = 15;
+    const p2x = tipX + back*Math.cos(ang + Math.PI);
+    const p2y = tipY + back*Math.sin(ang + Math.PI);
+    const p3x = p2x + wing*Math.cos(leftAng);
+    const p3y = p2y + wing*Math.sin(leftAng);
+    const p4x = p2x + wing*Math.cos(rightAng);
+    const p4y = p2y + wing*Math.sin(rightAng);
+    el.arrowHead.setAttribute('points', `${tipX},${tipY} ${p3x},${p3y} ${p4x},${p4y}`);
+  }
+
+function fmt(x){
+  if (!Number.isFinite(x)) return '—';
+  return Math.round(x); 
+}
+
+  function update(){
+    let d = Number(el.deg.value);
+    if (!Number.isFinite(d)) d = 0;
+    d = Math.max(0, Math.min(360, Math.round(d))); // enforce integer 0-360
+    el.deg.value = d;
+    el.range.value = d;
+
+    const U = Number(el.spd.value);
+    const rwy = pickRunwayAuto(d);
+    const KB = computeKB(d, rwy);   // corrected
+
+    // Components (m/s)
+    const Uyan = U * Math.sin(KB*Math.PI/180);
+    const Uqar = U * Math.cos(KB*Math.PI/180);
+
+    // AB logic from user's prior page (±1.3 * components depending on sector)
+    const sector28 = (d<=118 || d>=298); // same condition used in prior file
+    const AB1 = (sector28 ? -1.3*Uyan :  1.3*Uyan);
+    const AB2 = (sector28 ? -1.3*Uqar :  1.3*Uqar);
+    const AB3 = (sector28 ?  1.3*Uyan : -1.3*Uyan);
+    const AB4 = (sector28 ?  1.3*Uqar : -1.3*Uqar);
+
+    // MKs follow same pattern as user's file
+    const MK1 = (rwy===28 ? 28-AB1 : 208-AB1);
+    const MK2 = 298-AB2;
+    const MK3 = (rwy===28 ? 208-AB3 : 28-AB3);
+    const MK4 = 118-AB4;
+
+    // Update KPI text
+    el.kRwy.textContent = String(rwy);
+    el.kKB.textContent = fmt(KB,1) + '°';
+    el.kUyan.textContent = fmt(Uyan,1);
+    el.kUqar.textContent = fmt(Uqar,1);
+    el.ab1.textContent = fmt(AB1,1);
+    el.ab2.textContent = fmt(AB2,1);
+    el.ab3.textContent = fmt(AB3,1);
+    el.ab4.textContent = fmt(AB4,1);
+    el.mk1.textContent = Math.round(MK1);
+    el.mk2.textContent = Math.round(MK2);
+    el.mk3.textContent = Math.round(MK3);
+    el.mk4.textContent = Math.round(MK4);
+
+    // visuals
+    setRunwayLines(rwy);
+function setLabelAtAngle(textEl, angleDeg, radiusOffset=18){
+  const len = 150 + radiusOffset;
+  const ang = (angleDeg - 90) * Math.PI/180;
+  const x = 200 + len * Math.cos(ang);
+  const y = 200 + len * Math.sin(ang);
+  textEl.setAttribute('x', x);
+  textEl.setAttribute('y', y);
+}
+setLabelAtAngle(document.getElementById('lbl28'), 28);
+setLabelAtAngle(document.getElementById('lbl208'), 208);
+
+    setArrowEdgeToCenter(el.windArrow, d, 150);
+  }
+
+  // events
+  el.deg.addEventListener('input', update);
+  el.range.addEventListener('input', e => { el.deg.value = e.target.value; update(); });
+  el.btnSync.addEventListener('click', ()=>{ el.range.value = el.deg.value; update(); });
+  el.btnReset.addEventListener('click', ()=>{
+    el.deg.value = 45; el.range.value = 45;
+    el.spd.value = 5;
+    update();
+  });
+  el.spd.addEventListener('input', update);
+el.spdRange.addEventListener('input', e => { el.spd.value = e.target.value;
+  update(); });
+
+  update();
+})();
+</script>
+</body>
+</html>
