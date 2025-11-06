@@ -1,7 +1,7 @@
 {
   "name": "Dairə üzrə küləyin hesablanması",
   "short_name": "Külək",
-  "start_url": "./1.html",
+  "start_url": "./index.html",
   "display": "fullscreen",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
@@ -19,3 +19,4 @@
     }
   ]
 }
+
