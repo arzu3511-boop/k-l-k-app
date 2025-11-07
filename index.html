@@ -316,38 +316,5 @@ el.spdRange.addEventListener('input', e => { el.spd.value = e.target.value;
   update();
 })();
 </script>
-  <script>
-// --- PWA Install təklifi (header üçün inteqrasiya) ---
-let deferredPrompt;
-
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-
-  // header-ə uyğun düymə yarat
-  const header = document.querySelector('header');
-  const installBtn = document.createElement('button');
-  installBtn.textContent = '📲 Tətbiqi quraşdır';
-  installBtn.className = 'btn';
-  installBtn.style.marginLeft = 'auto'; // sağa hizalama
-  header.appendChild(installBtn);
-
-  installBtn.addEventListener('click', async () => {
-    installBtn.style.display = 'none';
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log('install outcome:', outcome);
-    deferredPrompt = null;
-  });
-});
-
-// Quraşdırıldıqda düyməni gizlət
-window.addEventListener('appinstalled', () => {
-  const btn = document.querySelector('header .btn');
-  if (btn) btn.style.display = 'none';
-});
-</script>
-</body>
-</html>
 </body>
 </html>
