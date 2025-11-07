@@ -317,31 +317,20 @@ el.spdRange.addEventListener('input', e => { el.spd.value = e.target.value;
 })();
 </script>
   <script>
-// --- PWA Install təklifi ---
+// --- PWA Install təklifi (header üçün inteqrasiya) ---
 let deferredPrompt;
+
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
 
-  // görünən düymə yarat
+  // header-ə uyğun düymə yarat
+  const header = document.querySelector('header');
   const installBtn = document.createElement('button');
   installBtn.textContent = '📲 Tətbiqi quraşdır';
-  Object.assign(installBtn.style, {
-    position: 'fixed',
-    bottom: '24px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    padding: '10px 20px',
-    background: '#2563eb',
-    color: 'white',
-    fontWeight: '600',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-    zIndex: '9999'
-  });
-  document.body.appendChild(installBtn);
+  installBtn.className = 'btn';
+  installBtn.style.marginLeft = 'auto'; // sağa hizalama
+  header.appendChild(installBtn);
 
   installBtn.addEventListener('click', async () => {
     installBtn.style.display = 'none';
@@ -354,9 +343,11 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 // Quraşdırıldıqda düyməni gizlət
 window.addEventListener('appinstalled', () => {
-  const btn = document.querySelector('button');
+  const btn = document.querySelector('header .btn');
   if (btn) btn.style.display = 'none';
 });
 </script>
+</body>
+</html>
 </body>
 </html>
